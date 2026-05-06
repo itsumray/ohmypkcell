@@ -6,6 +6,7 @@
     <title>THE SCIENCE OF OKAYAMA | its_um_ray</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@900&family=Montserrat:wght@900&family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <style>
         :root {
             --bg: #000;
@@ -40,7 +41,7 @@
             transition: all 1.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .container { height: 1400vh; } /* スクロールを長めにしてゆっくり動くように調整 */
+        .container { height: 1400vh; }
 
         section {
             position: fixed;
@@ -78,7 +79,6 @@
             text-transform: uppercase;
         }
 
-        /* フォーカス時の隙間問題を解消 */
         .card.focus {
             width: 85vw; height: 80vh;
             transform: translate(0, 0) scale(1) !important;
@@ -93,7 +93,7 @@
             opacity: 0; display: none;
             margin-top: 20px; transition: opacity 0.8s;
             text-align: left;
-            flex: 1; /* 余計な隙間を埋める */
+            flex: 1;
         }
 
         .card.focus .card-detail { 
@@ -118,10 +118,40 @@
         .stage-assembled .p-bl { transform: translate(-380px, 200px) rotate(0); }
         .stage-assembled .p-br { transform: translate(380px, 200px) rotate(0); }
 
-        .chart-box { background: rgba(255,255,255,0.05); border-radius: 20px; padding: 20px; height: 300px; }
+        .chart-box { background: rgba(255,255,255,0.05); border-radius: 20px; padding: 20px; height: 320px; }
         .flow-box { border-left: 3px solid var(--vibrant-red); padding-left: 20px; }
         .data-table { width: 100%; border-collapse: collapse; }
         .data-table td { padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.1); }
+
+        /* グラフィック用スタイル */
+        .terrain-viz {
+            position: relative;
+            width: 100%; height: 100%;
+            background: linear-gradient(180deg, #1a1a1a 0%, #0a0a0a 100%);
+            border-radius: 20px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .mtn-wall {
+            fill: #333;
+            stroke: var(--vibrant-red);
+            stroke-width: 2;
+        }
+        .rain-cloud {
+            position: absolute;
+            top: 20%;
+            left: 10%;
+            font-size: 3rem;
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
     </style>
 </head>
 <body>
@@ -159,8 +189,16 @@
                             <p style="font-weight: bold;">湿った季節風 → 山地で上昇 → 反対側で降雨 → 岡山へは「乾いた風」</p>
                         </div>
                     </div>
-                    <div style="display:flex; align-items:center; justify-content:center; background: rgba(255,255,255,0.03); border-radius: 20px; height: 100%;">
-                        <p style="text-align: center; font-size: 0.9rem; line-height: 2;">⛰️ 中国山地<br>☁️ 雨雲をブロック<br>☀️ 岡山平野</p>
+                    <div class="terrain-viz">
+                        <span class="rain-cloud">🌧️</span>
+                        <svg viewBox="0 0 200 100" style="width: 100%;">
+                            <path class="mtn-wall" d="M0,100 L40,40 L80,100 L120,20 L160,100 L200,100 Z" />
+                            <text x="25" y="30" fill="white" font-size="10">中国山地</text>
+                            <text x="105" y="15" fill="white" font-size="10">四国山地</text>
+                            <text x="75" y="80" fill="var(--vibrant-yellow)" font-size="12" font-weight="bold">OKAYAMA</text>
+                            <path d="M10,20 Q40,0 70,50" fill="none" stroke="white" stroke-dasharray="4" />
+                        </svg>
+                        <p style="text-align: center; font-size: 0.8rem; color: rgba(255,255,255,0.5); margin-top: 10px;">断面図：フェーン現象と地形性降雨</p>
                     </div>
                 </div>
             </div>
@@ -258,6 +296,7 @@
         function resetFocus() { cards.forEach(c => c.classList.remove('focus')); }
         function updateBg(c1, c2) { s1.style.stopColor = c1; s2.style.stopColor = c2; }
 
+        Chart.register(ChartDataLabels);
         new Chart(document.getElementById('chartA'), {
             type: 'bar',
             data: {
@@ -265,14 +304,28 @@
                 datasets: [{
                     label: '降水量(mm)',
                     data: [1100, 1550, 2040],
-                    backgroundColor: ['#ffcc00', 'rgba(255,255,255,0.1)', 'rgba(255,255,255,0.1)'],
+                    backgroundColor: ['#ffcc00', 'rgba(255,255,255,0.2)', 'rgba(255,255,255,0.2)'],
+                    borderColor: ['#ffcc00', '#fff', '#fff'],
+                    borderWidth: 1,
                     borderRadius: 12
                 }]
             },
             options: {
                 responsive: true, maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: { x: { ticks: { color: '#fff' } }, y: { display: false } }
+                plugins: { 
+                    legend: { display: false },
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'top',
+                        color: '#fff',
+                        font: { weight: 'bold', size: 14 },
+                        formatter: (val) => val + 'mm'
+                    }
+                },
+                scales: { 
+                    x: { ticks: { color: '#fff', font: { size: 14 } }, grid: { display: false } }, 
+                    y: { display: false } 
+                }
             }
         });
     </script>
