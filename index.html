@@ -3,44 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Science of Okayama | its_um_ray</title>
+    <title>THE SCIENCE OF SUNNY COUNTRY | OKAYAMA</title>
+    <!-- 極太フォントをロード -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@900&family=Montserrat:wght@900&family=Noto+Sans+JP:wght@900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --bg: #000;
             --text: #fff;
-            --accent: #ff3b30; /* バイブラントな赤 */
-            --sunny: #ffcc00; /* 太陽の黄 */
-            --panel-bg: rgba(255, 255, 255, 0.1);
+            --vibrant-1: #ff3b30;
+            --vibrant-2: #5856d6;
+            --vibrant-3: #ffcc00;
         }
 
         body {
             background-color: var(--bg);
             color: var(--text);
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             margin: 0;
             overflow-x: hidden;
+            font-family: 'Inter', 'Noto Sans JP', sans-serif;
         }
 
-        /* バイブラントな背景グラフィック（山） */
-        .background-graphic {
+        /* 巨大タイポグラフィの設定 */
+        .big-text {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 900;
+            text-transform: uppercase;
+            line-height: 0.85;
+            letter-spacing: -0.06em;
+            margin: 0;
+            /* 背景を透過させてバイブラントなグラフィックを見せる効果もアリ */
+        }
+
+        /* 背景：バイブラント・グラフィック */
+        .background-container {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             z-index: -1;
-            opacity: 0.6;
+            transition: background 1s ease;
         }
 
         .mountain-svg {
+            position: absolute;
+            bottom: 0;
             width: 100%;
-            height: 100%;
+            height: 60vh;
+            filter: blur(40px); /* 境界をぼかしてより幻想的に */
+            opacity: 0.8;
+            transition: fill 1s ease;
         }
 
-        /* セクション構造 */
-        .scroll-container {
-            height: 500vh; /* スクロール量を確保 */
+        /* スクロールセクション */
+        .scroll-wrapper {
+            height: 400vh;
         }
 
         section {
@@ -50,11 +68,13 @@
             width: 100%;
             height: 100vh;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             opacity: 0;
             pointer-events: none;
-            transition: opacity 0.5s;
+            transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 0 5vw;
         }
 
         section.active {
@@ -62,192 +82,155 @@
             pointer-events: all;
         }
 
-        /* パネルのアニメーション基盤 */
-        .panel {
-            background: var(--panel-bg);
-            backdrop-filter: blur(20px);
-            padding: 30px;
-            border-radius: 24px;
-            border: 1px solid rgba(255,255,255,0.2);
+        /* パネル：情報が飛んでくるギミック */
+        .info-panel {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 40px;
+            padding: 40px;
             position: absolute;
-            width: 300px;
-            transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            width: 320px;
+            transition: all 0.9s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .main-content {
-            text-align: center;
-            max-width: 800px;
-            z-index: 10;
-        }
+        /* 配置のバリエーション */
+        .pos-tl { transform: translate(-150vw, -150vh); top: 10%; left: 10%; }
+        .pos-tr { transform: translate(150vw, -150vh); top: 10%; right: 10%; }
+        .pos-bl { transform: translate(-150vw, 150vh); bottom: 10%; left: 10%; }
+        .pos-br { transform: translate(150vw, 150vh); bottom: 10%; right: 10%; }
 
-        h1 { font-size: 5rem; font-weight: 800; letter-spacing: -0.05em; margin: 0; }
-        h2 { font-size: 3rem; margin-bottom: 20px; }
+        /* Assembled状態（中央に集まる） */
+        .assembled .info-panel { transform: translate(0, 0); }
 
-        /* スクロールで集まるパネルの初期位置（画面外） */
-        .p-left { transform: translateX(-150vw) rotate(-10deg); }
-        .p-right { transform: translateX(150vw) rotate(10deg); }
-        .p-top { transform: translateY(-150vh); }
-        .p-bottom { transform: translateY(150vh); }
-
-        /* 集結した時のスタイル */
-        .assembled .p-left { transform: translateX(-350px) translateY(0) rotate(0); }
-        .assembled .p-right { transform: translateX(350px) translateY(0) rotate(0); }
-        .assembled .p-top { transform: translateY(-250px) rotate(0); }
-        .assembled .p-bottom { transform: translateY(250px) rotate(0); }
-
-        /* 特殊パネル（グラフなど） */
-        .chart-container { width: 100%; height: 200px; }
+        /* 巨大テキストのサイズ */
+        .hero-title { font-size: clamp(5rem, 18vw, 15rem); }
+        .sub-title { font-size: 1.5rem; letter-spacing: 0.2em; color: var(--vibrant-3); margin-bottom: 20px; }
 
         .tag {
-            background: var(--accent);
-            padding: 4px 12px;
-            border-radius: 100px;
-            font-size: 0.8rem;
-            font-weight: bold;
-            display: inline-block;
-            margin-bottom: 10px;
+            font-size: 0.7rem;
+            letter-spacing: 0.5em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.5);
+            margin-bottom: 1rem;
         }
 
-        .footer-note {
-            position: absolute;
-            bottom: 20px;
-            font-size: 0.8rem;
-            color: rgba(255,255,255,0.5);
-        }
+        .highlight { color: var(--vibrant-1); }
+
     </style>
 </head>
 <body>
 
-    <div class="background-graphic">
+    <div class="background-container" id="bgContainer">
         <svg class="mountain-svg" viewBox="0 0 1000 1000" preserveAspectRatio="none">
-            <!-- バイブラントな山のグラフィック -->
-            <path d="M0,1000 L0,600 L200,400 L400,700 L600,300 L800,500 L1000,200 L1000,1000 Z" fill="url(#grad1)" />
+            <path id="mountainPath" d="M0,1000 L0,600 L250,300 L500,700 L750,200 L1000,500 L1000,1000 Z" fill="url(#grad)" />
             <defs>
-                <linearGradient id="grad1" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" style="stop-color:#ff3b30;stop-opacity:1" />
-                    <stop offset="100%" style="stop-color:#5856d6;stop-opacity:1" />
+                <linearGradient id="grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" id="stop1" style="stop-color:var(--vibrant-1);stop-opacity:1" />
+                    <stop offset="100%" id="stop2" style="stop-color:var(--vibrant-2);stop-opacity:1" />
                 </linearGradient>
             </defs>
         </svg>
     </div>
 
-    <div class="scroll-container">
-        <!-- Section 1: Hero -->
+    <div class="scroll-wrapper">
+        <!-- Section 1: Impact Hero -->
         <section id="sec1" class="active">
-            <div class="main-content">
-                <span class="tag">IB MYP GEOGRAPHY</span>
-                <h1>OKAYAMA</h1>
-                <p style="font-size: 1.5rem; opacity: 0.8;">Why is it the "Sunny Country"?</p>
-            </div>
-            <div class="footer-note">Scroll to Explore</div>
+            <div class="tag">IB MYP Research Project</div>
+            <h1 class="big-text hero-title">SUNNY<br>LAND</h1>
+            <p class="sub-title">OKAYAMA GEOGRAPHY</p>
         </section>
 
-        <!-- Section 2: Factors Assembling -->
+        <!-- Section 2: Data Gathering -->
         <section id="sec2">
-            <div class="main-content">
-                <h2>地理的要因の集結</h2>
-            </div>
+            <h1 class="big-text" style="font-size: 6vw; text-align: center;">THE<br><span class="highlight">FACTORS</span></h1>
             
-            <div class="panel p-left" id="factor1">
-                <span class="tag">要因 01</span>
+            <div class="info-panel pos-tl">
+                <div class="tag">Natural Factor 01</div>
                 <h3>中国山地</h3>
-                <p>北からの湿った空気をブロック。雪や雨を北側に留めます。</p>
+                <p>北側の冬の季節風を遮断。</p>
             </div>
 
-            <div class="panel p-right" id="factor2">
-                <span class="tag">要因 02</span>
+            <div class="info-panel pos-tr">
+                <div class="tag">Natural Factor 02</div>
                 <h3>四国山地</h3>
-                <p>南からの台風や湿った空気の影響を最小限に抑える天然の防波堤。</p>
+                <p>南側の梅雨・台風を遮断。</p>
             </div>
 
-            <div class="panel p-top">
+            <div class="info-panel pos-bl">
+                <div class="tag">Atmosphere</div>
                 <h3>瀬戸内海式気候</h3>
-                <p>年間を通じて温暖で、晴天率が非常に高い独自の気候区。</p>
+                <p>降水量1mm未満の日数全国1位。</p>
             </div>
 
-            <div class="panel p-bottom">
-                <div class="chart-container">
-                    <canvas id="miniChart"></canvas>
-                </div>
-                <p style="font-size: 0.7rem; margin-top: 5px;">降水量の比較（岡山 vs 全国）</p>
+            <div class="info-panel pos-br">
+                <canvas id="miniChart" style="height: 100px;"></canvas>
+                <p style="font-size: 0.7rem; margin-top: 10px;">岡山 vs 全国の圧倒的な差</p>
             </div>
         </section>
 
         <!-- Section 3: Conclusion -->
         <section id="sec3">
-            <div class="main-content assembled">
-                <span class="tag">CONCLUSION</span>
-                <h2>必然としての「晴れ」</h2>
-                <p style="font-size: 1.2rem; line-height: 1.6;">
-                    地形という「自然的要因」が、<br>
-                    岡山というコミュニティーに<br>
-                    「晴れの国」という唯一無二の<br>
-                    アイデンティティを与えた。
-                </p>
-            </div>
+            <h1 class="big-text" style="font-size: 10vw; text-align: left;">GEOGRAPHY<br>IS LOGIC.</h1>
+            <p style="max-width: 600px; font-size: 1.2rem; line-height: 1.5; margin-top: 40px; font-weight: 300;">
+                地形という「物理的な壁」が、気候という「現象」を生み、それが「晴れの国」という文化を創り出す。これは偶然ではなく、地理学的な必然である。
+            </p>
         </section>
     </div>
 
     <script>
         const sections = document.querySelectorAll('section');
-        const sec2 = document.getElementById('sec2');
+        const stop1 = document.getElementById('stop1');
+        const stop2 = document.getElementById('stop2');
 
         window.addEventListener('scroll', () => {
             const scrollPos = window.scrollY;
             const wh = window.innerHeight;
 
-            // セクションの切り替え
-            if (scrollPos < wh) {
-                switchActive(0);
-            } else if (scrollPos >= wh && scrollPos < wh * 3) {
-                switchActive(1);
-                // パネルの集結具合をコントロール
-                const progress = (scrollPos - wh) / (wh * 2);
-                if (progress > 0.2) {
-                    sec2.classList.add('assembled');
+            if (scrollPos < wh * 0.5) {
+                activate(0);
+                updateBg('#ff3b30', '#5856d6'); // 赤×紫
+            } else if (scrollPos >= wh * 0.5 && scrollPos < wh * 2.5) {
+                activate(1);
+                updateBg('#5856d6', '#0071e3'); // 紫×青
+                
+                // パネル集結のトリガー
+                if (scrollPos > wh * 1.2) {
+                    sections[1].classList.add('assembled');
                 } else {
-                    sec2.classList.remove('assembled');
+                    sections[1].classList.remove('assembled');
                 }
             } else {
-                switchActive(2);
+                activate(2);
+                updateBg('#ffcc00', '#ff3b30'); // 黄×赤
             }
         });
 
-        function switchActive(index) {
-            sections.forEach((s, i) => {
-                s.classList.toggle('active', i === index);
-            });
+        function activate(index) {
+            sections.forEach((s, i) => s.classList.toggle('active', i === index));
         }
 
-        // Chart.js
+        function updateBg(c1, c2) {
+            stop1.style.stopColor = c1;
+            stop2.style.stopColor = c2;
+        }
+
+        // 簡易グラフ
         const ctx = document.getElementById('miniChart').getContext('2d');
         new Chart(ctx, {
-            type: 'line',
+            type: 'bar',
             data: {
-                labels: ['Jan', 'Mar', 'May', 'Jul', 'Sep', 'Nov'],
+                labels: ['Okayama', 'Other'],
                 datasets: [{
-                    label: 'Okayama',
-                    data: [30, 80, 100, 160, 150, 50],
-                    borderColor: '#ffcc00',
-                    tension: 0.4,
-                    fill: false
-                }, {
-                    label: 'Avg',
-                    data: [50, 110, 140, 200, 210, 80],
-                    borderColor: 'rgba(255,255,255,0.3)',
-                    borderDash: [5, 5],
-                    tension: 0.4,
-                    fill: false
+                    data: [100, 60],
+                    backgroundColor: ['#ffcc00', 'rgba(255,255,255,0.2)'],
+                    borderRadius: 10
                 }]
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
-                scales: { 
-                    x: { display: false },
-                    y: { display: false }
-                }
+                scales: { x: { display: false }, y: { display: false } }
             }
         });
     </script>
