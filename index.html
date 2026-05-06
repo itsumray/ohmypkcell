@@ -3,15 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>THE SCIENCE OF OKAYAMA | its_um_ray</title>
+    <title>THE SCIENCE OF OKAYAMA</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@900&family=Montserrat:wght@900&family=Noto+Sans+JP:wght@400;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --bg: #000;
             --text: #fff;
-            --accent: #ff3b30;
-            --sunny: #ffcc00;
-            --blue: #0071e3;
+            --vibrant-1: #ff3b30;
+            --vibrant-2: #5856d6;
+            --vibrant-3: #ffcc00;
         }
 
         body {
@@ -22,194 +23,178 @@
             font-family: 'Inter', 'Noto Sans JP', sans-serif;
         }
 
-        /* 巨大背景グラフィック */
-        .bg-graphic {
+        /* 背景グラフィック */
+        .background-container {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             z-index: -1;
-            filter: blur(60px);
-            opacity: 0.6;
+        }
+
+        .mountain-svg {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 65vh;
+            filter: blur(45px);
+            opacity: 0.7;
             transition: all 1s ease;
         }
 
-        /* スクロール管理用のラッパー */
-        .container {
-            height: 1000vh; /* かなり長めに設定 */
-        }
+        /* スクロール領域 */
+        .scroll-wrapper { height: 1000vh; }
 
-        /* 各ステージのベース */
         section {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            visibility: hidden;
-            opacity: 0;
-            transition: opacity 0.5s, visibility 0.5s;
+            top: 0; left: 0;
+            width: 100%; height: 100vh;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            opacity: 0; visibility: hidden;
+            transition: opacity 0.6s, visibility 0.6s;
         }
 
-        section.active {
-            visibility: visible;
-            opacity: 1;
-        }
+        section.active { opacity: 1; visibility: visible; }
 
-        /* パネル（集結と拡大） */
+        /* パネルデザイン */
         .panel {
             background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(40px);
+            backdrop-filter: blur(35px);
             border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 40px;
             padding: 40px;
             position: absolute;
-            width: 380px;
-            transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            width: 350px;
+            transition: all 0.9s cubic-bezier(0.16, 1, 0.3, 1);
             z-index: 10;
         }
 
-        /* 拡大（フォーカス）時のスタイル */
+        /* 拡大（フォーカス） */
         .panel.focus {
-            width: 80vw;
-            height: 70vh;
+            width: 85vw; height: 75vh;
             transform: translate(0, 0) scale(1) !important;
             z-index: 100;
             background: rgba(255, 255, 255, 0.15);
         }
 
-        .panel-content {
-            opacity: 0;
-            transition: opacity 0.5s;
-            display: none;
+        .panel-detail {
+            opacity: 0; display: none;
+            margin-top: 25px; transition: opacity 0.5s;
         }
 
-        .panel.focus .panel-content {
-            opacity: 1;
-            display: block;
-            margin-top: 20px;
-        }
+        .panel.focus .panel-detail { opacity: 1; display: block; }
 
         /* タイポグラフィ */
-        .big-title {
-            font-family: 'Montserrat', sans-serif;
-            font-size: clamp(4rem, 15vw, 12rem);
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: -0.05em;
-            text-align: center;
-        }
+        .hero-title { font-size: clamp(5rem, 18vw, 14rem); font-weight: 900; letter-spacing: -0.06em; text-align: center; }
+        .tag { font-size: 0.8rem; background: var(--vibrant-1); padding: 4px 15px; border-radius: 50px; display: inline-block; margin-bottom: 15px; font-weight: bold; }
+        
+        /* 集結用初期位置 */
+        .p1 { transform: translate(-150vw, -150vh); }
+        .p2 { transform: translate(150vw, -150vh); }
+        .p3 { transform: translate(-150vw, 150vh); }
+        .p4 { transform: translate(150vw, 150vh); }
 
-        .tag {
-            background: var(--accent);
-            padding: 5px 15px;
-            border-radius: 100px;
-            font-size: 0.8rem;
-            font-weight: bold;
-            display: inline-block;
-            margin-bottom: 15px;
-        }
+        /* 集結時 */
+        .stage-assembled .p1 { transform: translate(-420px, -180px); }
+        .stage-assembled .p2 { transform: translate(420px, -180px); }
+        .stage-assembled .p3 { transform: translate(-420px, 200px); }
+        .stage-assembled .p4 { transform: translate(420px, 200px); }
 
-        h3 { font-size: 2.5rem; margin: 0; }
-        p { font-size: 1.1rem; line-height: 1.6; color: rgba(255,255,255,0.8); }
-
-        /* 文献セクション用 */
-        .bib-list {
-            text-align: left;
-            font-size: 0.9rem;
-            color: #86868b;
-        }
-
-        /* 初期位置：画面外 */
-        .p1 { transform: translate(-150vw, -150vh) rotate(-20deg); }
-        .p2 { transform: translate(150vw, -150vh) rotate(20deg); }
-        .p3 { transform: translate(-150vw, 150vh) rotate(-10deg); }
-
-        /* ステージ2：集結位置 */
-        .stage-assembled .p1 { transform: translate(-420px, -150px) rotate(0); }
-        .stage-assembled .p2 { transform: translate(420px, -150px) rotate(0); }
-        .stage-assembled .p3 { transform: translate(0, 280px) rotate(0); width: 600px; }
-
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9rem; }
+        th, td { border-bottom: 1px solid rgba(255,255,255,0.2); padding: 10px; text-align: left; }
+        
+        .chart-box { height: 250px; width: 100%; margin-top: 20px; }
     </style>
 </head>
 <body>
 
-    <div class="bg-graphic" id="bg">
-        <svg width="100%" height="100%">
-            <circle id="blob1" cx="20%" cy="30%" r="40%" fill="#ff3b30" />
-            <circle id="blob2" cx="80%" cy="70%" r="40%" fill="#5856d6" />
+    <div class="background-container">
+        <svg class="mountain-svg" viewBox="0 0 1000 1000" preserveAspectRatio="none">
+            <path id="mountainPath" d="M0,1000 L0,600 L250,350 L500,750 L750,250 L1000,550 L1000,1000 Z" fill="url(#grad)" />
+            <defs>
+                <linearGradient id="grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" id="stop1" style="stop-color:var(--vibrant-1)" />
+                    <stop offset="100%" id="stop2" style="stop-color:var(--vibrant-2)" />
+                </linearGradient>
+            </defs>
         </svg>
     </div>
 
-    <div class="container">
-        <!-- Section 1: Hero -->
+    <div class="scroll-wrapper">
+        <!-- 1. Hero -->
         <section id="sec1" class="active">
-            <h1 class="big-title">SUNNY<br>SIDE</h1>
+            <span class="tag">IB MYP 地理的レンズ</span>
+            <h1 class="hero-title">SUNNY<br>LAND</h1>
+            <p style="font-size: 1.5rem;">岡山が「晴れの国」である理由を探究する</p>
         </section>
 
-        <!-- Section 2: Factors & Detail Scroll -->
+        <!-- 2. Main Explore -->
         <section id="sec2">
-            <div id="main-title" class="big-title" style="font-size: 5vw; opacity: 0.3;">THE EVIDENCE</div>
-            
-            <!-- Panel 1: 中国山地 -->
+            <h2 class="hero-title" style="font-size: 6vw; opacity: 0.2;">RESEARCH</h2>
+
+            <!-- Panel 1: 地形 (断面図イメージ) -->
             <div class="panel p1" id="panel1">
-                <span class="tag">FACTOR 01</span>
-                <h3>中国山地</h3>
-                <div class="panel-content">
-                    <p>
-                        中国山地は、岡山県の北側に位置する巨大な「物理的障壁」です。
-                        冬の季節風が日本海から運ぶ湿った空気は、この山地を越える際に雪や雨として降下します。
-                        山を越えた空気は乾燥した状態で岡山平野へ流れ込み、冬季の晴天率を劇的に向上させています。
-                    </p>
-                    <p style="margin-top:15px; font-weight:bold;">[参考文献: 岡山地方気象台「岡山県の気象概況」]</p>
+                <span class="tag">自然地理要素：地形</span>
+                <h3>二つの山脈による遮蔽</h3>
+                <div class="panel-detail">
+                    <p>北に中国山地、南に四国山地が位置。季節風が雨を降らせる前に山でブロックされます。</p>
+                    <div style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 20px; margin-top: 15px;">
+                        <p style="font-size: 0.8rem; font-weight: bold;">[地形フローチャート]</p>
+                        <p style="font-size: 0.8rem;">湿った風 → 山脈に衝突 → 上昇気流で雨(反対側) → 乾いた風が岡山へ</p>
+                    </div>
                 </div>
             </div>
 
-            <!-- Panel 2: 四国山地 -->
+            <!-- Panel 2: 気候 (比較グラフ) -->
             <div class="panel p2" id="panel2">
-                <span class="tag">FACTOR 02</span>
-                <h3>四国山地</h3>
-                <div class="panel-content">
-                    <p>
-                        南側にそびえる四国山地は、太平洋側からの台風や湿った南風をブロックする役割を果たします。
-                        これにより、岡山県は夏期においても他の太平洋側の都市に比べて降水量が抑えられる傾向にあります。
-                        二つの山地に守られた「回廊」のような地形が、瀬戸内海式気候の核心です。
-                    </p>
-                    <p style="margin-top:15px; font-weight:bold;">[参考文献: 国土地理院「日本の地形：中国・四国地方」]</p>
+                <span class="tag">自然地理要素：気候</span>
+                <h3>圧倒的な少雨データ</h3>
+                <div class="panel-detail">
+                    <p>岡山は全国でもトップクラスに雨が少ない都市です。その根拠を視覚化します。</p>
+                    <div class="chart-box">
+                        <canvas id="precipChart"></canvas>
+                    </div>
                 </div>
             </div>
 
-            <!-- Panel 3: 統計と人文地理 -->
+            <!-- Panel 3: 人間活動 (比較表) -->
             <div class="panel p3" id="panel3">
-                <span class="tag">DATA & IMPACT</span>
-                <h3>降水量と生活</h3>
-                <div class="panel-content">
-                    <p>
-                        岡山県の「降水量1mm未満の日数」は年間約270日以上に達し、全国トップクラスです。
-                        この気候的特性は、歴史的に溜池（ためいけ）文化の発達や、
-                        高品質なマスカット、桃などの果物栽培という「人文地理的要素」を形作ってきました。
-                    </p>
-                    <p style="margin-top:15px; font-weight:bold;">[参考文献: 岡山県「晴れの国おかやまの魅力統計」]</p>
+                <span class="tag">人文地理要素：産業</span>
+                <h3>気候がもたらす恩恵</h3>
+                <div class="panel-detail">
+                    <p>この気候が、岡山独自の文化や産業（果物栽培など）を形成しました。</p>
+                    <table>
+                        <tr><th>影響</th><th>具体例</th></tr>
+                        <tr><td>農業</td><td>マスカット・桃の高品質な栽培</td></tr>
+                        <tr><td>防災</td><td>歴史的に大規模水害の少なさと防災意識</td></tr>
+                        <tr><td>歴史</td><td>干拓地の開発と溜池ネットワークの形成</td></tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Panel 4: 文献 (リスト) -->
+            <div class="panel p4" id="panel4">
+                <span class="tag">DATA SOURCE</span>
+                <h3>参考文献</h3>
+                <div class="panel-detail">
+                    <ul style="font-size: 0.9rem; color: #ccc;">
+                        <li>岡山地方気象台「岡山県の気候」</li>
+                        <li>国土地理院「日本の地形解析」</li>
+                        <li>岡山県「晴れの国おかやまの統計」</li>
+                        <li>ジャパンナレッジSchool「瀬戸内海式気候」</li>
+                    </ul>
                 </div>
             </div>
         </section>
 
-        <!-- Section 3: Bibliography -->
+        <!-- 3. Conclusion -->
         <section id="sec3">
-            <div style="max-width: 800px; text-align: left;">
-                <h2 class="big-title" style="font-size: 3rem; text-align: left;">REFERENCES</h2>
-                <div class="bib-list" style="margin-top: 40px;">
-                    <p>・国土地理院 (2026) 「地理院地図：岡山平野周辺の地形解析」</p>
-                    <p>・気象庁 (2026) 「過去の気象データ検索：岡山県」</p>
-                    <p>・岡山県知事公報 (2025) 「晴れの国おかやま」の定義と地理的背景</p>
-                    <p>・ジャパンナレッジschool 「日本大百科全書：瀬戸内海式気候」</p>
-                </div>
-                <h1 class="big-title" style="margin-top:60px; font-size: 8vw;">LOGIC.</h1>
-            </div>
+            <h1 class="hero-title" style="font-size: 10vw; text-align: left;">GEOGRAPHY<br>IS LOGIC.</h1>
+            <p style="max-width: 600px; font-size: 1.2rem; line-height: 1.6; margin-top: 40px;">
+                地形というハードウェアが、気候というソフトウェアを動かし、「晴れの国」という社会的事象を生み出した。
+            </p>
         </section>
     </div>
 
@@ -219,69 +204,69 @@
         const p1 = document.getElementById('panel1');
         const p2 = document.getElementById('panel2');
         const p3 = document.getElementById('panel3');
-        const blob1 = document.getElementById('blob1');
-        const blob2 = document.getElementById('blob2');
+        const p4 = document.getElementById('panel4');
+        const s1 = document.getElementById('stop1');
+        const s2 = document.getElementById('stop2');
 
         window.addEventListener('scroll', () => {
             const y = window.scrollY;
             const wh = window.innerHeight;
 
-            // セクション切り替えロジック
             if (y < wh) {
-                // Stage 1: Hero
-                updateActive(0);
-                resetPanels();
-                blob1.setAttribute('fill', '#ff3b30');
+                activate(0);
+                s1.style.stopColor = '#ff3b30';
+                s2.style.stopColor = '#5856d6';
             } else if (y >= wh && y < wh * 8) {
-                // Stage 2: Assembling & Detail
-                updateActive(1);
-                const progress = (y - wh) / wh;
+                activate(1);
+                const prog = (y - wh) / wh;
 
-                // 1. まず集まる (progress 0 ~ 1)
-                if (progress < 1.5) {
+                if (prog < 1.0) {
                     sec2.classList.add('stage-assembled');
                     resetFocus();
-                } 
-                // 2. パネル1拡大 (progress 1.5 ~ 3)
-                else if (progress < 3.5) {
-                    setFocus(p1);
-                    blob1.setAttribute('fill', '#0071e3');
-                }
-                // 3. パネル2拡大 (progress 3.5 ~ 5.5)
-                else if (progress < 5.5) {
-                    setFocus(p2);
-                    blob1.setAttribute('fill', '#5856d6');
-                }
-                // 4. パネル3拡大 (progress 5.5 ~ 7.5)
-                else if (progress < 7.5) {
-                    setFocus(p3);
-                    blob1.setAttribute('fill', '#ffcc00');
+                    s1.style.stopColor = '#5856d6';
+                    s2.style.stopColor = '#0071e3';
+                } else if (prog < 2.5) {
+                    focus(p1);
+                } else if (prog < 4.5) {
+                    focus(p2);
+                    s1.style.stopColor = '#0071e3';
+                    s2.style.stopColor = '#ffcc00';
+                } else if (prog < 6.5) {
+                    focus(p3);
+                } else {
+                    focus(p4);
+                    s1.style.stopColor = '#ffcc00';
+                    s2.style.stopColor = '#ff3b30';
                 }
             } else {
-                // Stage 3: Bibliography
-                updateActive(2);
+                activate(2);
             }
         });
 
-        function updateActive(idx) {
-            sections.forEach((s, i) => s.classList.toggle('active', i === idx));
-        }
+        function activate(i) { sections.forEach((s, n) => s.classList.toggle('active', n === i)); }
+        function focus(el) { resetFocus(); el.classList.add('focus'); }
+        function resetFocus() { [p1,p2,p3,p4].forEach(p => p.classList.remove('focus')); }
 
-        function setFocus(el) {
-            resetFocus();
-            el.classList.add('focus');
-            document.getElementById('main-title').style.opacity = "0.05";
-        }
-
-        function resetFocus() {
-            [p1, p2, p3].forEach(p => p.classList.remove('focus'));
-            document.getElementById('main-title').style.opacity = "0.3";
-        }
-
-        function resetPanels() {
-            sec2.classList.remove('stage-assembled');
-            resetFocus();
-        }
+        // Chart
+        const ctx = document.getElementById('precipChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['岡山', '東京', '大阪', '那覇'],
+                datasets: [{
+                    label: '年間降水量 (mm)',
+                    data: [1100, 1520, 1280, 2040],
+                    backgroundColor: ['#ffcc00', 'rgba(255,255,255,0.2)', 'rgba(255,255,255,0.2)', 'rgba(255,255,255,0.2)'],
+                    borderRadius: 15
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { x: { display: false }, y: { display: false } }
+            }
+        });
     </script>
 </body>
 </html>
