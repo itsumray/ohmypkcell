@@ -3,299 +3,250 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Science of Sunny Country | Okayama</title>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;500;700&family=Montserrat:wght@700&display=swap" rel="stylesheet">
+    <title>The Science of Okayama | its_um_ray</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --apple-black: #1d1d1f;
-            --apple-gray: #f5f5f7;
-            --apple-blue: #0071e3;
-            --text-secondary: #86868b;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'SF Pro Display', 'Noto Sans JP', sans-serif;
-            -webkit-font-smoothing: antialiased;
+            --bg: #000;
+            --text: #fff;
+            --accent: #ff3b30; /* バイブラントな赤 */
+            --sunny: #ffcc00; /* 太陽の黄 */
+            --panel-bg: rgba(255, 255, 255, 0.1);
         }
 
         body {
-            background-color: white;
-            color: var(--apple-black);
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
             overflow-x: hidden;
         }
 
-        /* アニメーション用クラス */
-        .reveal {
-            opacity: 0;
-            transform: translateY(50px);
-            transition: all 1s cubic-bezier(0.25, 0.1, 0.25, 1);
-        }
-
-        .reveal.active {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        /* セクション共通 */
-        section {
-            padding: 120px 5vw;
-            max-width: 1200px;
-            margin: 0 auto;
-            min-height: 80vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-
-        /* ヒーローセクション */
-        .hero {
-            height: 100vh;
-            text-align: center;
-            background: radial-gradient(circle at 50% 50%, #fff 0%, #e0f0ff 100%);
-        }
-
-        .hero h1 {
-            font-size: clamp(3rem, 8vw, 6rem);
-            font-weight: 700;
-            letter-spacing: -0.03em;
-            background: linear-gradient(180deg, #1d1d1f 0%, #434343 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .tagline {
-            font-size: 1.5rem;
-            color: var(--apple-blue);
-            font-weight: 500;
-            margin-bottom: 20px;
-        }
-
-        /* 地理的要素カード */
-        .grid-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 40px;
-            margin-top: 60px;
-        }
-
-        .feature-card {
-            background: var(--apple-gray);
-            border-radius: 30px;
-            padding: 50px;
-            transition: transform 0.3s ease;
-        }
-
-        .feature-card:hover {
-            transform: scale(1.02);
-        }
-
-        h2 { font-size: 3rem; margin-bottom: 40px; text-align: center; }
-        h3 { font-size: 2rem; margin-bottom: 20px; }
-        p { font-size: 1.1rem; line-height: 1.8; color: #424245; }
-
-        /* 地形ビジュアライザー */
-        .mountain-container {
+        /* バイブラントな背景グラフィック（山） */
+        .background-graphic {
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
-            height: 300px;
-            background: #fff;
-            border-radius: 20px;
-            position: relative;
-            overflow: hidden;
-            margin-top: 30px;
-            border: 1px solid #e5e5e7;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.6;
         }
 
-        .cloud {
-            position: absolute;
-            width: 100px;
-            height: 40px;
-            background: #d2d2d7;
-            border-radius: 20px;
-            top: 50px;
-            left: -150px;
-            animation: drift 10s linear infinite;
+        .mountain-svg {
+            width: 100%;
+            height: 100%;
         }
 
-        @keyframes drift {
-            0% { left: -150px; opacity: 0; }
-            20% { opacity: 1; }
-            50% { left: 40%; top: 50px; }
-            60% { left: 45%; top: 100px; opacity: 0.5; }
-            100% { left: 110%; opacity: 0; }
+        /* セクション構造 */
+        .scroll-container {
+            height: 500vh; /* スクロール量を確保 */
         }
 
-        .mountain-peak {
-            position: absolute;
-            bottom: 0;
-            left: 45%;
-            width: 0;
-            height: 0;
-            border-left: 100px solid transparent;
-            border-right: 100px solid transparent;
-            border-bottom: 150px solid #86868b;
+        section {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s;
         }
 
-        /* 統計セクション */
-        .stats-section {
-            background-color: var(--apple-black);
-            color: white;
-            border-radius: 50px;
-            margin: 40px 2vw;
+        section.active {
+            opacity: 1;
+            pointer-events: all;
         }
 
-        .stats-section h2, .stats-section p { color: white; }
-
-        .chart-box {
-            background: rgba(255,255,255,0.1);
+        /* パネルのアニメーション基盤 */
+        .panel {
+            background: var(--panel-bg);
+            backdrop-filter: blur(20px);
             padding: 30px;
-            border-radius: 20px;
-            height: 400px;
+            border-radius: 24px;
+            border: 1px solid rgba(255,255,255,0.2);
+            position: absolute;
+            width: 300px;
+            transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        footer {
+        .main-content {
             text-align: center;
-            padding: 60px;
-            color: var(--text-secondary);
-            font-size: 0.9rem;
+            max-width: 800px;
+            z-index: 10;
         }
 
-        @media (max-width: 768px) {
-            .grid-container { grid-template-columns: 1fr; }
-            section { padding: 60px 20px; }
+        h1 { font-size: 5rem; font-weight: 800; letter-spacing: -0.05em; margin: 0; }
+        h2 { font-size: 3rem; margin-bottom: 20px; }
+
+        /* スクロールで集まるパネルの初期位置（画面外） */
+        .p-left { transform: translateX(-150vw) rotate(-10deg); }
+        .p-right { transform: translateX(150vw) rotate(10deg); }
+        .p-top { transform: translateY(-150vh); }
+        .p-bottom { transform: translateY(150vh); }
+
+        /* 集結した時のスタイル */
+        .assembled .p-left { transform: translateX(-350px) translateY(0) rotate(0); }
+        .assembled .p-right { transform: translateX(350px) translateY(0) rotate(0); }
+        .assembled .p-top { transform: translateY(-250px) rotate(0); }
+        .assembled .p-bottom { transform: translateY(250px) rotate(0); }
+
+        /* 特殊パネル（グラフなど） */
+        .chart-container { width: 100%; height: 200px; }
+
+        .tag {
+            background: var(--accent);
+            padding: 4px 12px;
+            border-radius: 100px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+
+        .footer-note {
+            position: absolute;
+            bottom: 20px;
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.5);
         }
     </style>
 </head>
 <body>
 
-    <!-- Hero -->
-    <section class="hero">
-        <div class="reveal active">
-            <p class="tagline">IB MYP UNIT 1: 地理レンズ</p>
-            <h1>晴れの国、<br>その裏側にある必然。</h1>
-            <p style="margin-top:20px; font-size:1.3rem; color: var(--text-secondary);">岡山県が「晴れの国」である地理的要因の探究</p>
-        </div>
-    </section>
+    <div class="background-graphic">
+        <svg class="mountain-svg" viewBox="0 0 1000 1000" preserveAspectRatio="none">
+            <!-- バイブラントな山のグラフィック -->
+            <path d="M0,1000 L0,600 L200,400 L400,700 L600,300 L800,500 L1000,200 L1000,1000 Z" fill="url(#grad1)" />
+            <defs>
+                <linearGradient id="grad1" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" style="stop-color:#ff3b30;stop-opacity:1" />
+                    <stop offset="100%" style="stop-color:#5856d6;stop-opacity:1" />
+                </linearGradient>
+            </defs>
+        </svg>
+    </div>
 
-    <!-- Core Concept -->
-    <section>
-        <div class="reveal">
-            <h2 style="font-size: 1.5rem; text-align: left; color: var(--apple-blue);">INTRODUCTION</h2>
-            <p style="font-size: 2rem; font-weight: 500; max-width: 800px;">
-                社会的事象は、偶然ではない。<br>
-                地形という「構造」と、気候という「プロセス」が、<br>
-                このコミュニティーのアイデンティティを形成している。
-            </p>
-        </div>
-    </section>
-
-    <!-- Geographic Factors -->
-    <section style="background-color: var(--apple-gray); max-width: 100%;">
-        <div class="reveal">
-            <h2>2つの決定的要因</h2>
-            <div class="grid-container">
-                <!-- 要素1: 地形 -->
-                <div class="feature-card">
-                    <h3>01. 地形</h3>
-                    <p>北の「中国山地」と南の「四国山地」。この二つの壁が、季節風が運ぶ湿った空気をブロック。雨粒は山の向こう側に落ち、岡山には乾燥した空気が届く。</p>
-                    <div class="mountain-container">
-                        <div class="cloud"></div>
-                        <div class="mountain-peak"></div>
-                        <p style="position:absolute; bottom:10px; left:10px; font-size:0.7rem;">山脈による遮蔽モデル</p>
-                    </div>
-                </div>
-                <!-- 要素2: 気候 -->
-                <div class="feature-card">
-                    <h3>02. 気候</h3>
-                    <p>瀬戸内海特有の「瀬戸内海式気候」。年間を通じて温暖で、降水量が極めて少ない。この安定した環境が、近代的なインフラや農業の基盤となった。</p>
-                    <p style="margin-top:20px; font-weight: bold;">降水量1mm未満の日数：全国1位</p>
-                </div>
+    <div class="scroll-container">
+        <!-- Section 1: Hero -->
+        <section id="sec1" class="active">
+            <div class="main-content">
+                <span class="tag">IB MYP GEOGRAPHY</span>
+                <h1>OKAYAMA</h1>
+                <p style="font-size: 1.5rem; opacity: 0.8;">Why is it the "Sunny Country"?</p>
             </div>
-        </div>
-    </section>
+            <div class="footer-note">Scroll to Explore</div>
+        </section>
 
-    <!-- Data Visualization -->
-    <section class="stats-section">
-        <div class="reveal">
-            <h2>数値で見る、晴れの国。</h2>
-            <p style="text-align:center; margin-bottom: 40px;">主要都市との年間降水量比較（推計）</p>
-            <div class="chart-box">
-                <canvas id="okayamaChart"></canvas>
+        <!-- Section 2: Factors Assembling -->
+        <section id="sec2">
+            <div class="main-content">
+                <h2>地理的要因の集結</h2>
             </div>
-        </div>
-    </section>
+            
+            <div class="panel p-left" id="factor1">
+                <span class="tag">要因 01</span>
+                <h3>中国山地</h3>
+                <p>北からの湿った空気をブロック。雪や雨を北側に留めます。</p>
+            </div>
 
-    <!-- Conclusion -->
-    <section>
-        <div class="reveal">
-            <h2 style="text-align: left;">結論</h2>
-            <div style="border-left: 4px solid var(--apple-blue); padding-left: 30px;">
-                <p style="font-size: 1.5rem; color: var(--apple-black);">
-                    岡山が「晴れの国」と呼ばれるのは、単なるキャッチコピーではなく、<b>二つの山地に囲まれた盆地的な地形</b>と、それによって生じる<b>瀬戸内海式気候</b>という、自然地理的要素の相互作用の結果である。
-                </p>
-                <p style="margin-top: 20px; color: var(--text-secondary);">
-                    この気候は、災害の少なさや高品質な果物栽培といった「人文地理的要素」へと繋がり、現在の岡山コミュニティーを形作っている。
+            <div class="panel p-right" id="factor2">
+                <span class="tag">要因 02</span>
+                <h3>四国山地</h3>
+                <p>南からの台風や湿った空気の影響を最小限に抑える天然の防波堤。</p>
+            </div>
+
+            <div class="panel p-top">
+                <h3>瀬戸内海式気候</h3>
+                <p>年間を通じて温暖で、晴天率が非常に高い独自の気候区。</p>
+            </div>
+
+            <div class="panel p-bottom">
+                <div class="chart-container">
+                    <canvas id="miniChart"></canvas>
+                </div>
+                <p style="font-size: 0.7rem; margin-top: 5px;">降水量の比較（岡山 vs 全国）</p>
+            </div>
+        </section>
+
+        <!-- Section 3: Conclusion -->
+        <section id="sec3">
+            <div class="main-content assembled">
+                <span class="tag">CONCLUSION</span>
+                <h2>必然としての「晴れ」</h2>
+                <p style="font-size: 1.2rem; line-height: 1.6;">
+                    地形という「自然的要因」が、<br>
+                    岡山というコミュニティーに<br>
+                    「晴れの国」という唯一無二の<br>
+                    アイデンティティを与えた。
                 </p>
             </div>
-        </div>
-    </section>
-
-    <footer>
-        &copy; 2026 its_um_ray | IB MYP Formative Assessment<br>
-        Sources: 国土地理院地図, 岡山県公式サイト, 気象庁統計データ
-    </footer>
+        </section>
+    </div>
 
     <script>
-        // スクロール時のアニメーション制御
-        const observerOptions = {
-            threshold: 0.1
-        };
+        const sections = document.querySelectorAll('section');
+        const sec2 = document.getElementById('sec2');
 
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('active');
+        window.addEventListener('scroll', () => {
+            const scrollPos = window.scrollY;
+            const wh = window.innerHeight;
+
+            // セクションの切り替え
+            if (scrollPos < wh) {
+                switchActive(0);
+            } else if (scrollPos >= wh && scrollPos < wh * 3) {
+                switchActive(1);
+                // パネルの集結具合をコントロール
+                const progress = (scrollPos - wh) / (wh * 2);
+                if (progress > 0.2) {
+                    sec2.classList.add('assembled');
+                } else {
+                    sec2.classList.remove('assembled');
                 }
+            } else {
+                switchActive(2);
+            }
+        });
+
+        function switchActive(index) {
+            sections.forEach((s, i) => {
+                s.classList.toggle('active', i === index);
             });
-        }, observerOptions);
+        }
 
-        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
-
-        // Chart.jsによるグラフ描画
-        const ctx = document.getElementById('okayamaChart').getContext('2d');
+        // Chart.js
+        const ctx = document.getElementById('miniChart').getContext('2d');
         new Chart(ctx, {
-            type: 'bar',
+            type: 'line',
             data: {
-                labels: ['岡山', '東京', '大阪', '那覇', '金沢'],
+                labels: ['Jan', 'Mar', 'May', 'Jul', 'Sep', 'Nov'],
                 datasets: [{
-                    label: '年間降水量 (mm)',
-                    data: [1100, 1530, 1279, 2040, 2399],
-                    backgroundColor: (context) => {
-                        return context.dataIndex === 0 ? '#0071e3' : 'rgba(255, 255, 255, 0.2)';
-                    },
-                    borderRadius: 15,
-                    barThickness: 40
+                    label: 'Okayama',
+                    data: [30, 80, 100, 160, 150, 50],
+                    borderColor: '#ffcc00',
+                    tension: 0.4,
+                    fill: false
+                }, {
+                    label: 'Avg',
+                    data: [50, 110, 140, 200, 210, 80],
+                    borderColor: 'rgba(255,255,255,0.3)',
+                    borderDash: [5, 5],
+                    tension: 0.4,
+                    fill: false
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                scales: {
-                    y: { 
-                        beginAtZero: true, 
-                        grid: { color: 'rgba(255,255,255,0.1)' },
-                        ticks: { color: '#86868b' }
-                    },
-                    x: { 
-                        grid: { display: false },
-                        ticks: { color: '#fff', font: { weight: 'bold' } }
-                    }
-                },
-                plugins: {
-                    legend: { display: false }
+                plugins: { legend: { display: false } },
+                scales: { 
+                    x: { display: false },
+                    y: { display: false }
                 }
             }
         });
