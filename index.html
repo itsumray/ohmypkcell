@@ -13,8 +13,6 @@
             --vibrant-red: #ff3b30;
             --vibrant-purple: #5856d6;
             --vibrant-yellow: #ffcc00;
-            --glass: rgba(255, 255, 255, 0.08);
-            --card-active: rgba(15, 15, 15, 0.98);
         }
 
         body {
@@ -23,21 +21,24 @@
             margin: 0;
             overflow-x: hidden;
             font-family: 'Inter', 'Noto Sans JP', sans-serif;
+            -webkit-font-smoothing: antialiased;
         }
 
+        /* 描画負荷軽減：GPUアクセラレーション強制 */
         .bg-layer {
             position: fixed;
             top: 0; left: 0;
             width: 100%; height: 100%;
             z-index: -1;
+            transform: translateZ(0);
         }
 
         .mountain-svg {
             position: absolute;
-            bottom: 0; width: 100%; height: 75vh;
+            bottom: -10%; width: 100%; height: 80vh;
             filter: blur(60px);
-            opacity: 0.8;
-            transition: all 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+            opacity: 0.7;
+            will-change: transform;
         }
 
         .container { height: 1200vh; }
@@ -48,84 +49,83 @@
             width: 100%; height: 100vh;
             display: flex; justify-content: center; align-items: center;
             opacity: 0; visibility: hidden;
-            transition: opacity 0.7s ease;
+            transition: opacity 0.4s ease; /* 高速化 */
         }
 
         section.active { opacity: 1; visibility: visible; }
 
-        /* カードデザイン */
+        /* カード：重いbackdrop-filterを限定的に */
         .card {
-            background: var(--glass);
-            backdrop-filter: blur(40px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 40px;
-            padding: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 30px;
+            padding: 30px;
             position: absolute;
-            width: 320px;
-            height: 200px;
-            transition: all 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+            width: 300px;
+            height: 180px;
+            transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1); /* レスポンス重視 */
             z-index: 10;
-            overflow: hidden;
+            cursor: pointer;
+            will-change: transform, width, height;
         }
 
-        /* 拡大時：画面一杯のダッシュボード */
+        /* 拡大時：backdrop-filterをoffにして描画を軽く */
         .card.focus {
-            width: 92vw;
+            width: 90vw;
             height: 85vh;
             transform: translate(0, 0) scale(1) !important;
             z-index: 100;
-            background: var(--card-active);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 24px;
+            background: #0a0a0a;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
         }
 
-        .source-tag {
+        .source-badge {
             position: absolute;
-            top: 30px; right: 30px;
+            top: 25px; right: 25px;
             font-size: 0.7rem;
-            color: var(--text);
-            background: rgba(255,255,255,0.1);
-            padding: 6px 14px;
+            color: var(--vibrant-yellow);
+            border: 1px solid var(--vibrant-yellow);
+            padding: 4px 10px;
             border-radius: 4px;
-            letter-spacing: 0.1em;
-            opacity: 0;
+            opacity: 0.6;
         }
-        .card.focus .source-tag { opacity: 0.6; }
 
-        .card-content {
+        .card-inner {
             display: none;
-            height: 100%;
-            grid-template-columns: 1fr 1fr;
+            height: 90%;
+            grid-template-columns: 1.2fr 0.8fr;
             grid-template-rows: auto 1fr auto;
-            gap: 30px;
-            margin-top: 20px;
+            gap: 25px;
+            padding-top: 20px;
         }
-        .card.focus .card-content { display: grid; }
+        .card.focus .card-inner { display: grid; }
 
-        .p-tl { transform: translate(-140vw, -120vh) rotate(-10deg); }
-        .p-tr { transform: translate(140vw, -120vh) rotate(10deg); }
-        .p-bl { transform: translate(-140vw, 120vh) rotate(-5deg); }
-        .p-br { transform: translate(140vw, 120vh) rotate(5deg); }
+        /* レイアウト埋め：下の隙間をfooterで消す */
+        .title-box { grid-column: 1 / -1; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px; }
+        .data-panel { background: rgba(255,255,255,0.03); border-radius: 15px; padding: 20px; }
+        .desc-panel { font-size: 1.05rem; line-height: 1.7; color: #ccc; }
+        .footer-bar { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px; font-size: 0.85rem; color: #666; }
 
-        .stage-assembled .p-tl { transform: translate(-400px, -200px); }
-        .stage-assembled .p-tr { transform: translate(400px, -200px); }
-        .stage-assembled .p-bl { transform: translate(-400px, 220px); }
-        .stage-assembled .p-br { transform: translate(400px, 220px); }
+        /* 配置用 */
+        .p-tl { transform: translate(-300%, -200%) rotate(-5deg); }
+        .p-tr { transform: translate(300%, -200%) rotate(5deg); }
+        .p-bl { transform: translate(-300%, 200%) rotate(-3deg); }
+        .p-br { transform: translate(300%, 200%) rotate(3deg); }
 
-        /* コンテンツパーツ */
-        .title-area { grid-column: 1 / -1; }
-        .data-viz { background: rgba(255,255,255,0.03); border-radius: 20px; padding: 25px; position: relative; }
-        .analysis-text { font-size: 1.1rem; line-height: 1.8; color: rgba(255,255,255,0.8); }
-        .footer-insight { grid-column: 1 / -1; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; font-weight: bold; color: var(--vibrant-yellow); }
+        .stage-assembled .p-tl { transform: translate(-380px, -180px); }
+        .stage-assembled .p-tr { transform: translate(380px, -180px); }
+        .stage-assembled .p-bl { transform: translate(-380px, 200px); }
+        .stage-assembled .p-br { transform: translate(380px, 200px); }
 
-        .hero-title { font-size: 12vw; font-weight: 900; line-height: 0.85; text-align: center; }
+        .hero-title { font-size: 10vw; font-weight: 900; line-height: 0.8; text-align: center; }
     </style>
 </head>
 <body>
 
     <div class="bg-layer">
         <svg class="mountain-svg" viewBox="0 0 1000 1000" preserveAspectRatio="none">
-            <path id="mtn" d="M0,1000 L0,550 L250,300 L500,750 L750,200 L1000,550 L1000,1000 Z" fill="url(#g)" />
+            <path id="mtn" d="M0,1000 L0,500 L250,300 L500,700 L750,200 L1000,500 L1000,1000 Z" fill="url(#g)" />
             <defs>
                 <linearGradient id="g" x1="0%" y1="0%" x2="0%" y2="100%">
                     <stop offset="0%" id="s1" style="stop-color:var(--vibrant-red)" />
@@ -136,95 +136,106 @@
     </div>
 
     <div class="container">
+        <!-- 1. HERO -->
         <section id="sec1" class="active">
-            <h1 class="hero-title">RESEARCHING<br>OKAYAMA</h1>
+            <h1 class="hero-title">OKAYAMA<br>LOGIC</h1>
         </section>
 
+        <!-- 2. MAIN -->
         <section id="sec2">
             <!-- 01 地形 -->
             <div class="card p-tl" id="c1">
-                <span class="source-tag">SOURCE: GSI JAPAN</span>
-                <h2 style="font-size: 1.5rem; margin:0;">01. OROGRAPHY</h2>
-                <div class="card-content">
-                    <div class="title-area"><h3 style="font-size: 3rem; margin:0;">地形の二重遮蔽</h3></div>
-                    <div class="analysis-text">
-                        <p>中国山地と四国山地が巨大な堤防として機能。季節風が運ぶ湿気を岡山の手前で「絞り出す」ため、平野部には常に乾燥した安定気流が供給される仕組み。</p>
-                        <p style="margin-top:20px; font-size:0.9rem; color:var(--vibrant-red);">※フェーン現象による昇温も夏場の特徴</p>
+                <span class="source-badge">SOURCE: GSI</span>
+                <h3 style="margin:0;">01. OROGRAPHY</h3>
+                <div class="card-inner">
+                    <div class="title-box"><h2 style="font-size: 2.5rem; margin:0;">山脈による雨雲の遮蔽</h2></div>
+                    <div class="desc-panel">
+                        <p>北の中国山地、南の四国山地が盾となり、湿った季節風をブロック。この「ダブル・バリア」が岡山平野に安定した晴天をもたらす主要因です。</p>
+                        <p style="margin-top:15px; color:var(--vibrant-red); font-weight:bold;">→ 瀬戸内海式気候の成立</p>
                     </div>
-                    <div class="data-viz">
-                        <div style="font-family: monospace; line-height: 1.8;">
-                            [NORTH] 中国山地 (1000m+) <br>
-                            &nbsp;&nbsp;↓ 降雨・降雪を吸収 <br>
-                            [CENTER] 岡山平野 (CLEAR) <br>
-                            &nbsp;&nbsp;↑ 水蒸気をブロック <br>
-                            [SOUTH] 四国山地 (1500m+)
+                    <div class="data-panel">
+                        <div style="font-family: monospace; font-size: 0.9rem;">
+                            [WIND] ━━▶ [MTN] ━━▶ [CLEAR]<br><br>
+                            - 北：中国山地 (1200m級)<br>
+                            - 南：四国山地 (1900m級)<br>
+                            - 中央：岡山平野 (降水量少)
                         </div>
                     </div>
-                    <div class="footer-insight">CONCLUSION: 地形という物理障壁が、気象の特異点を作り出している。</div>
+                    <div class="footer-bar">
+                        <span>IB MYP GEOGRAPHY REPORT</span>
+                        <span>STATUS: ANALYZED</span>
+                    </div>
                 </div>
             </div>
 
             <!-- 02 気候 -->
             <div class="card p-tr" id="c2">
-                <span class="source-tag">SOURCE: JMA STATISTICS</span>
-                <h2 style="font-size: 1.5rem; margin:0;">02. CLIMATE DATA</h2>
-                <div class="card-content">
-                    <div class="title-area"><h3 style="font-size: 3rem; margin:0;">降水確率のパラドックス</h3></div>
-                    <div class="data-viz">
-                        <canvas id="chartA"></canvas>
-                    </div>
-                    <div class="analysis-text">
-                        <p>年間の降水量だけでなく「降水1mm未満の日数」において日本一を誇る。これは単に雨が少ないだけでなく、屋外活動や産業にとって極めて予測可能性が高い環境であることを意味する。</p>
-                        <ul style="font-size: 0.9rem; margin-top:20px;">
-                            <li>年間日照時間: 約2,200時間</li>
-                            <li>瀬戸内海式気候の典型的モデル</li>
+                <span class="source-badge">SOURCE: JMA</span>
+                <h3 style="margin:0;">02. STATISTICS</h3>
+                <div class="card-inner">
+                    <div class="title-box"><h2 style="font-size: 2.5rem; margin:0;">晴天率の客観的データ</h2></div>
+                    <div class="data-panel"><canvas id="chartA"></canvas></div>
+                    <div class="desc-panel">
+                        <p>「降水1mm未満の日数」が全国1位。この統計的優位性が「晴れの国」というブランディングの根拠となっています。</p>
+                        <ul style="font-size: 0.9rem; margin-top:10px;">
+                            <li>年間降水量：約1,100mm</li>
+                            <li>日照時間：全国トップクラス</li>
                         </ul>
                     </div>
-                    <div class="footer-insight">DATA: 統計的に裏付けられた「晴れの国」の客観的証拠。</div>
+                    <div class="footer-bar">
+                        <span>METEOROLOGICAL DATA 2025</span>
+                        <span>PRECISION: HIGH</span>
+                    </div>
                 </div>
             </div>
 
             <!-- 03 産業 -->
             <div class="card p-bl" id="c3">
-                <span class="source-tag">SOURCE: PREF. OKAYAMA</span>
-                <h2 style="font-size: 1.5rem; margin:0;">03. HUMAN IMPACT</h2>
-                <div class="card-content">
-                    <div class="title-area"><h3 style="font-size: 3rem; margin:0;">気候が作る経済</h3></div>
-                    <div class="analysis-text">
-                        <p>この特異な気候は、糖度の高い高級果物（桃・マスカット）の生産を可能にした。また、災害の少なさは企業のデータセンター誘致などの現代的メリットにも繋がっている。</p>
+                <span class="source-badge">SOURCE: OKAYAMA PREF</span>
+                <h3 style="margin:0;">03. INDUSTRY</h3>
+                <div class="card-inner">
+                    <div class="title-box"><h2 style="font-size: 2.5rem; margin:0;">気候が育む経済価値</h2></div>
+                    <div class="desc-panel">
+                        <p>豊富な日照は高品質な「白桃」「マスカット」を育て、少ない災害リスクはインフラの安定を支えています。地理的特性がそのまま経済的メリットに直結しています。</p>
                     </div>
-                    <div class="data-viz">
-                        <table style="width:100%; font-size:0.9rem; border-collapse:collapse;">
-                            <tr style="border-bottom:1px solid #444;"><td style="padding:10px;">白桃生産量</td><td style="text-align:right;">全国トップクラス</td></tr>
-                            <tr style="border-bottom:1px solid #444;"><td style="padding:10px;">晴天率</td><td style="text-align:right;">全国1位(1mm未満)</td></tr>
-                            <tr style="border-bottom:1px solid #444;"><td style="padding:10px;">地震リスク</td><td style="text-align:right;">相対的に低</td></tr>
+                    <div class="data-panel">
+                        <table style="width:100%; font-size:0.85rem; border-collapse:collapse;">
+                            <tr style="border-bottom:1px solid #333;"><td style="padding:8px;">白桃</td><td>糖度選果基準 合格率高</td></tr>
+                            <tr style="border-bottom:1px solid #333;"><td style="padding:8px;">企業</td><td>データセンター拠点化</td></tr>
+                            <tr style="border-bottom:1px solid #333;"><td style="padding:8px;">太陽光</td><td>発電効率 全国上位</td></tr>
                         </table>
                     </div>
-                    <div class="footer-insight">SOCIETY: 自然環境をリソースとした地域独自の発展を遂げている。</div>
+                    <div class="footer-bar">
+                        <span>ECONOMY & GEOGRAPHY</span>
+                        <span>IMPACT: POSITIVE</span>
+                    </div>
                 </div>
             </div>
 
             <!-- 04 出典 -->
             <div class="card p-br" id="c4">
-                <span class="source-tag">SOURCE: BIBLIOGRAPHY</span>
-                <h2 style="font-size: 1.5rem; margin:0;">04. BIBLIOGRAPHY</h2>
-                <div class="card-content">
-                    <div class="title-area"><h3 style="font-size: 3rem; margin:0;">情報の根拠</h3></div>
-                    <div class="analysis-text" style="grid-column: 1 / -1;">
-                        <ul style="list-style:none; padding:0; line-height:2.5;">
-                            <li>• 気象庁「過去の気象データ検索（岡山）」</li>
-                            <li>• 国土交通省 国土地理院「日本の典型的な地形」</li>
-                            <li>• 岡山県農林水産部「岡山県の果樹統計」</li>
-                            <li>• IB地理学テキスト「気候変動と地域環境」</li>
+                <span class="source-badge">REFERENCE</span>
+                <h3 style="margin:0;">04. SOURCES</h3>
+                <div class="card-inner">
+                    <div class="title-box"><h2 style="font-size: 2.5rem; margin:0;">参考文献リスト</h2></div>
+                    <div class="desc-panel" style="grid-column: 1 / -1;">
+                        <ul style="list-style:none; padding:0; line-height:2;">
+                            <li>・岡山地方気象台「岡山県の気候」</li>
+                            <li>・国土地理院「日本の地形解析」</li>
+                            <li>・岡山県「晴れの国おかやまの統計」</li>
+                            <li>・ジャパンナレッジ「瀬戸内海式気候」</li>
                         </ul>
                     </div>
-                    <div class="footer-insight">TRUST: すべてのデータは2025年時点の公式統計に基づいています。</div>
+                    <div class="footer-bar">
+                        <span>PROJECT BY its_um_ray</span>
+                        <span>DATE: 2026-05-07</span>
+                    </div>
                 </div>
             </div>
         </section>
 
         <section id="sec3">
-            <h1 class="hero-title">END OF<br>REPORT.</h1>
+            <h1 class="hero-title">COMPLETE</h1>
         </section>
     </div>
 
@@ -233,8 +244,22 @@
         const cards = [document.getElementById('c1'), document.getElementById('c2'), document.getElementById('c3'), document.getElementById('c4')];
         const s1 = document.getElementById('s1'), s2 = document.getElementById('s2');
 
+        let lastScrollY = 0;
+        let ticking = false;
+
         window.addEventListener('scroll', () => {
-            const y = window.scrollY, wh = window.innerHeight;
+            lastScrollY = window.scrollY;
+            if (!ticking) {
+                window.requestAnimationFrame(() => {
+                    update(lastScrollY);
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        });
+
+        function update(y) {
+            const wh = window.innerHeight;
             const p = y / wh;
 
             if (p < 1) {
@@ -243,15 +268,16 @@
                 activate(1);
                 const step = p - 1;
                 document.getElementById('sec2').classList.toggle('stage-assembled', step < 1.5);
+                
                 if (step < 1.5) { resetFocus(); updateBg('#5856d6', '#0071e3'); }
-                else if (step < 3.5) { focus(cards[0]); updateBg('#ff3b30', '#000'); }
-                else if (step < 5.5) { focus(cards[1]); updateBg('#5856d6', '#000'); }
-                else if (step < 7.5) { focus(cards[2]); updateBg('#ffcc00', '#000'); }
-                else { focus(cards[3]); updateBg('#222', '#000'); }
+                else if (step < 3.5) { focus(cards[0]); updateBg('#ff3b30', '#111'); }
+                else if (step < 5.5) { focus(cards[1]); updateBg('#5856d6', '#111'); }
+                else if (step < 7.5) { focus(cards[2]); updateBg('#ffcc00', '#111'); }
+                else { focus(cards[3]); updateBg('#333', '#111'); }
             } else {
                 activate(2); updateBg('#ff3b30', '#000');
             }
-        });
+        }
 
         function activate(i) { sections.forEach((s, n) => s.classList.toggle('active', n === i)); }
         function focus(el) { resetFocus(); el.classList.add('focus'); }
@@ -264,14 +290,14 @@
                 labels: ['OKAYAMA', 'TOKYO', 'OSAKA'],
                 datasets: [{
                     data: [1100, 1550, 1280],
-                    backgroundColor: ['#ffcc00', 'rgba(255,255,255,0.1)', 'rgba(255,255,255,0.1)'],
-                    borderRadius: 8
+                    backgroundColor: ['#ffcc00', '#444', '#444'],
+                    borderRadius: 5
                 }]
             },
             options: {
                 responsive: true, maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
-                scales: { x: { ticks: { color: '#fff' } }, y: { display: false } }
+                scales: { x: { ticks: { color: '#666' } }, y: { display: false } }
             }
         });
     </script>
